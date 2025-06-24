@@ -9,6 +9,7 @@ Todo
 - [ ] device logos/ images
 - [ ] per device html description - think proxmox summaries 
 - [ ] device presents history
+- [ ] turn each Todo into issue 
 
 
   Alternatives
