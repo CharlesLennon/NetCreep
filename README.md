@@ -1,17 +1,6 @@
 # NetCreep
 NetCreep is a modern fast network mapper designed from the ground up to have a responsive UI
 
-Todo
-
-- [ ] logo -think like the livewire logo but green
-- [ ] fix mobile 
-- [ ] settings - hide macs (useful for videos/screenshots)
-- [ ] device logos/ images
-- [ ] per device html description - think proxmox summaries 
-- [ ] device presents history
-- [ ] turn each Todo into issue 
-
-
   Alternatives
 
 - [PiAlert by leiweibau](https://github.com/leiweibau/Pi.Alert/) (maintained, bare-metal install)
