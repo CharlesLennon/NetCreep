@@ -19,4 +19,4 @@ Route::get('/', function () {
 
 Route::get('/devices', function () {
     return view('devices');
-});
+})->name('devices');
