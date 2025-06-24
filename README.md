@@ -1,5 +1,5 @@
 # NetCreep
-NetCreep is a modern fast network mapper
+NetCreep is a modern fast network mapper designed from the ground up to have a responsive UI
 
 Todo
 
