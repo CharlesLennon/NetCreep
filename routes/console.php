@@ -2,7 +2,8 @@
 
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
-
+use Illuminate\Support\Facades\Schedule;
+use Illuminate\Support\Facades\Log;
 /*
 |--------------------------------------------------------------------------
 | Console Routes
@@ -14,6 +15,116 @@ use Illuminate\Support\Facades\Artisan;
 |
 */
 
+function getInterface() {
+    // Get the default network interface
+    $myInterface = exec('ip route | grep default | awk \'{print $5}\'');
+    return $myInterface ?: 'eth0'; // Fallback to eth0 if not found
+}
+
+// tmp funcs
+function processArpScanOutput($output) {
+    $myInterface = getInterface();
+    $lines = explode("\n", $output);
+    foreach ($lines as $line) {
+        $mac = arpScanGetMacAddress($line);
+        if ($mac) {
+            $ip = arpScanGetIPAddress($line);
+            $name = arpScanGetName($line);
+            $device = App\Models\Device::updateOrCreate(
+                [
+                    'mac' => $mac,
+                ],
+                [
+                    'last_ip' => $ip,
+                    'last_seen' => now(),
+                    'first_found' => now(), 
+                ]
+            );
+            // Update the device's name if it is not set or unknown
+            if (!$device->name || $device->name === 'Unknown') {
+                $device->name = $name ?: 'Unknown';
+                $device->save();
+            }
+            Log::info("Found MAC address: $mac, IP: $ip, Name: $name");   
+        }
+    }
+    // what is my IP and MAC address
+    $myMac = exec("cat /sys/class/net/$myInterface/address");
+    $myIp = exec('hostname -I | awk \'{print $1}\''); // Get the first IP address
+    Log::info("My MAC address: $myMac, My IP: $myIp");
+    // Update or create my device
+    App\Models\Device::updateOrCreate(
+        [
+            'mac' => $myMac,
+        ],
+        [
+            'last_ip' => $myIp,
+            'last_seen' => now(),
+            'first_found' => now(),
+            'name' => env('APP_NAME', 'NetCreep'),
+        ]
+    );
+    return "ARP scan completed. Found " . count($lines) . " devices.";
+}
+
+function arpScanGetMacAddress($line) {
+    // Example line: "192.168.1.82    66:c7:33:41:01:bc       (Unknown: locally administered)"
+    $parts = preg_split('/\s+/', $line);
+    if (count($parts) >= 2) {
+        $mac = $parts[1];
+        // Validate MAC address format
+        if (preg_match('/^([0-9a-f]{2}:){5}[0-9a-f]{2}$/i', $mac)) {
+            return $mac;
+        }
+    }
+    return null; // Return null if no valid MAC address found
+}
+
+function arpScanGetIPAddress($line) {
+    // Example line: "192.168.1.82    66:c7:33:41:01:bc       (Unknown: locally administered)"
+    $parts = preg_split('/\s+/', $line);
+    if (count($parts) >= 1) {
+        $ip = $parts[0];
+        // Validate IP address format
+        if (filter_var($ip, FILTER_VALIDATE_IP)) {
+            return $ip;
+        }
+    }
+    return null; // Return null if no valid IP address found
+}
+
+function arpScanGetName($line) {
+    // Example line: "192.168.1.82    66:c7:33:41:01:bc       (Unknown: locally administered)"
+    $parts = preg_split('/\s+/', $line);
+    if (count($parts) >= 3) {
+        // The name is usually in parentheses at the end of the line
+        $name = trim($parts[2], '()');
+        return $name;
+    }
+    return null; // Return null if no valid name found
+}
+
 Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
+
+
+
+// run an arp-scan every 5 minutes
+Artisan::command('arp-scan', function () {
+    $this->comment('Running arp-scan...');
+    $myInterface = getInterface();
+    $output = shell_exec("arp-scan --interface=$myInterface --localnet");
+    $result = processArpScanOutput($output);
+    $this->comment($result);
+})->purpose('Run arp-scan on the local network');
+
+Schedule::command('arp-scan')
+    ->everyFiveMinutes()
+    ->withoutOverlapping()
+    ->onFailure(function () {
+        Log::error('Arp-scan command failed to execute.');
+    })
+    ->onSuccess(function () {
+        Log::info('Arp-scan command executed successfully.');
+    });
