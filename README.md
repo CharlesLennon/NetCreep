@@ -1,5 +1,5 @@
 # NetCreep
-NetCreep is a modern fast newwork mapper
+NetCreep is a modern fast network mapper
 
 Todo
 
