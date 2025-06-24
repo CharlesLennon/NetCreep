@@ -8,3 +8,4 @@ Todo
 - [ ] settings - hide macs (useful for videos/screenshots)
 - [ ] device logos/ images
 - [ ] per device html description - think proxmox summaries 
+- [ ] device presents history
