@@ -3,6 +3,8 @@ NetCreep is a modern fast network mapper designed from the ground up to have a r
 
 ![alt text](image.png)
 
+Features list to come, check the closed issues for now
+
 Alternatives
 
 - [PiAlert by leiweibau](https://github.com/leiweibau/Pi.Alert/) (maintained, bare-metal install)
