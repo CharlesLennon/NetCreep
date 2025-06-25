@@ -104,23 +104,25 @@ function arpScanGetName($line) {
     return null; // Return null if no valid name found
 }
 
-Artisan::command('inspire', function () {
-    $this->comment(Inspiring::quote());
-})->purpose('Display an inspiring quote');
+Artisan::command('reset-settings', function () {
+   App\Models\Settings::reset();
+})->purpose('Set settings to defaults (also used for 1st set up)');
 
 
 
 // run an arp-scan every 5 minutes
 Artisan::command('arp-scan', function () {
     $this->comment('Running arp-scan...');
-    $myInterface = getInterface();
-    $output = shell_exec("arp-scan --interface=$myInterface --localnet");
+    $output = shell_exec("arp-scan " . getSetting('arp.args'));
     $result = processArpScanOutput($output);
     $this->comment($result);
-})->purpose('Run arp-scan on the local network');
+})->purpose('Run arp-scan ' . getSetting('arp.args') .'');
+
+
+$frequencyCron = getSetting('arp.frquency-cron');
 
 Schedule::command('arp-scan')
-    ->everyFiveMinutes()
+    ->cron($frequencyCron)
     ->withoutOverlapping()
     ->onFailure(function () {
         Log::error('Arp-scan command failed to execute.');

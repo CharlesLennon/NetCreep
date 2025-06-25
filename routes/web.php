@@ -13,10 +13,8 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function () {
-    return view('base');
-});
+Route::get('/', fn() => view('base'));
 
-Route::get('/devices', function () {
-    return view('devices');
-})->name('devices');
+Route::get('/devices', fn() => view('devices'))->name('devices');
+
+Route::get('/settings', fn() => view('settings'))->name('settings');
