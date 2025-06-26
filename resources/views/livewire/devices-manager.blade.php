@@ -1,7 +1,8 @@
 <div><div>
     <style>
         .node:hover{
-            background-color: rgba(238, 216, 54, 0)!important;
+            background-color: var(--original-bg) !important;
+            cursor: pointer !important;
         }
     </style>
     <div class="" wire:ignore>
@@ -171,7 +172,7 @@
                 font-size: 12px;
                 overflow: hidden;
             "`;
-            return `<div class="flex gap-2" ${fixStyleStyle}>
+            return `<div class="flex gap-2 noIsibs" ${fixStyleStyle} >
             
                 <div>${data.self_portHTML}</div>
                 <div>${data.nodeTitle}</div>
@@ -192,7 +193,22 @@
                 'toggleSiblingsResp': false,
                 'nodeTemplate': customNodeTemplate
             });
+
+            $('.noIsibs').each(function() {
+                const siblingsToRemove = $(this).siblings('i');
+                if (siblingsToRemove.length > 0) {
+                    siblingsToRemove.remove();
+                }
+            });
+
+            $('.node').each(function() {
+                var $this = $(this);
+                var originalBgColor = $this.css('background-color');
+                $this.css('--original-bg', originalBgColor);
+            });
         });
+
+
     </script>
 
 </div></div>
