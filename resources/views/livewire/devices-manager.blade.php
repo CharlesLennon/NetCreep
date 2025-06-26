@@ -83,7 +83,7 @@
                 'nodeTitle' => $nodeTitle,
                 'nodeContent' => $nodeContent,
                 'relationship' => $relationship,
-                'className' => getSetting('style.device-background-color-class') . " mx-[10px!important]  text-white", // Or use a custom class
+                'className' => getSetting('style.device-background-color-class') . " mx-[10px!important]  text-white",
                 'collapsed' => false, 
                 'self_portHTML' => $device->self_port ? '<div class="h-full ' . getSetting('style.self-port-class') . ' items-center p-1">' . $device->self_port . '</div>' : '',
             ];
