@@ -1,7 +1,7 @@
 <div><div>
 
-    <div class="flex justify-center items-center h-screen" wire:ignore>
-        <div id="svg-tree" class="w-full h-full"></div>
+    <div class="" wire:ignore>
+        <div id="chart-container"></div>
     </div>
     
     @if($device_id)
@@ -65,110 +65,126 @@
     @endif
 
     @php
-        // We define a recursive function (a "closure") to transform each device.
-        // The `use (&$transform)` part allows the function to call itself.
-        $transformDevice = function ($device) use (&$transformDevice) {
-            $selfPortBackgroundColor = getSetting('style.self-port-class');
+        $transformDevice = function ($device, $hasParent = false) use (&$transformDevice) {
+            // Determine relationship string: 'hasParent' 'hasSiblings' 'hasChildren'
+            // For simplicity, we'll assume a node always has siblings unless it's the only child of its parent.
+            // However, without the full context of how siblings are determined, we'll make a general assumption.
+            // For this basic transformation, we'll assume '1' for siblings and parent if it's not the root.
+            $hasChildren = $device->children->isNotEmpty() ? '1' : '0';
+            $relationship = ($hasParent ? '1' : '0') . '1' . $hasChildren; // Assuming '1' for siblings for now
+
+            // The new library expects 'nodeTitle' and 'nodeContent'.
+            // We'll use device name for title and IP for content, or a combination.
+            $nodeTitle = $device->name ?: 'Unknown Device';
+            $nodeContent = $device->last_ip ?: 'No IP';
+
+            // The 'id' property is used for the node's unique ID.
+            $nodeId = $device->mac;
+
             $node = [
-                'id' => $device->mac,
-                'data' => [
-                    'name' => ($device->name ?: 'unknown') ." ". $device->last_ip ,
-                    'id' => $device->mac,
-                    'self_portHTML' => $device->self_port ? '<div class="flex h-full ' . $selfPortBackgroundColor . ' items-center p-1">' . $device->self_port . '</div>' : '',
-                ],
-                'options' => [
-                    'nodeBGColor' =>  getSetting('style.device-background-color'),
-                    'nodeBGColorHover' => getSetting('style.device-background-color-hover')
+                'id' => $nodeId,
+                'nodeTitle' => $nodeTitle,
+                'nodeContent' => $nodeContent,
+                'relationship' => $relationship,
+                'className' => getSetting('style.device-background-color-class') . " mx-[10px!important] w-fit ", // Or use a custom class
+                'collapsed' => false, // Default to expanded, adjust as needed
+                'otherPro' => [ // This is where you can store additional data
+                    'mac' => $device->mac,
+                    'self_portHTML' => $device->self_port ? '<div class="h-full ' . getSetting('style.self-port-class') . ' items-center p-1">' . $device->self_port . '</div>' : '',
+                    // You might add the background colors here if you intend to style via nodeTemplate JS
+                    'nodeBGColor' => getSetting('style.device-background-color-class'),
                 ]
             ];
 
-            // If the device has children, we recursively transform them.
+            // If the device has children, we need to create port nodes first.
             if ($device->children->isNotEmpty()) {
-                // We use ->map() to apply this same function to each child.
-                //it should be device -> children_parent_port -> children
                 $ports = $device->children->pluck('parent_port')->unique()->values();
-                //each port should be a node
+                
                 $node['children'] = $ports->map(function ($port) use ($device, $transformDevice) {
                     // Create a port node
+                    $portNodeId = displayMac($device) . '-' . $port;
+                    $portNodeTitle = '';
+                    $portNodeContent = 'Port: ' . $port;
+
+                    // Port nodes are children of devices, so they have a parent.
+                    $portHasChildren = $device->children->where('parent_port', $port)->isNotEmpty() ? '1' : '0';
+                    $portRelationship = '11' . $portHasChildren; // Has parent, has siblings (among ports), has children
+
                     $portNode = [
-                        'id' => displayMac($device) . '-' . $port,
-                        'data' => [
-                            'name' => 'Port: ' . $port,
-                            'id' => "port-" . $device->mac . '-' . $port,
-                        ],
-                        'options' => [
-                            'nodeBGColor' => getSetting('style.children-port-background-color'),
-                            'nodeBGColorHover' => getSetting('style.children-port-background-color-hover')
+                        'id' => $portNodeId,
+                        'nodeTitle' => $portNodeTitle,
+                        'nodeContent' => $portNodeContent,
+                        'relationship' => $portRelationship,
+                        'className' => getSetting('style.children-port-background-color-class'), // Or custom class
+                        'collapsed' => false, // Default to expanded
+                        'otherPro' => [
+                            'port_number' => $port,
+                            'nodeBGColor' => getSetting('style.children-port-background-color-class'),
                         ],
                         'children' => []
                     ];
-                    // Filter children for this port
+
+                    // Filter children for this specific port and recursively transform them.
                     $childrenForPort = $device->children->where('parent_port', $port);
-                    // If there are children for this port, transform them
                     if ($childrenForPort->isNotEmpty()) {
-                        $portNode['children'] = $childrenForPort->map($transformDevice)->values();
+                        // Pass true for $hasParent to indicate these are children nodes
+                        $portNode['children'] = $childrenForPort->map(fn($child) => $transformDevice($child, true))->values();
                     }
                     return $portNode;
-                })->values();
+                })->values()->all(); // Convert collection to plain array
             } else {
-                // If there are no children, we just set an empty array.
-                // This is important to ensure the structure is consistent.
-                // Otherwise, ApexTree might not render the node correctly.
-
-
-                $node['children'] = $device->children->map($transformDevice)->values();
+                // If no children, ensure 'children' property is an empty array for consistency
+                $node['children'] = [];
             }
 
             return $node;
         };
 
-        // 1. Get top-level devices and eager load ALL descendants using our new relationship.
+        // 1. Get top-level devices and eager load ALL descendants.
         $devices = App\Models\Device::whereNull('parent_mac')
                                     ->with('childrenRecursive')
                                     ->get();
 
         // 2. Map over the top-level devices to start the transformation process.
-        $treeData = $devices->map($transformDevice)->values();
+        // Top-level devices do not have a parent, so $hasParent is false.
+        $treeData = $devices->map(fn($device) => $transformDevice($device, false))->values()->all(); // Convert collection to plain array
 
-        // 3. Assemble the final data structure for the ApexTree library.
+        // 3. Assemble the final data structure for the OrgChart library.
+        // The root node 'INTERNET' doesn't have a parent, so its relationship is '011'
+        // (no parent, has siblings if other root nodes were present, has children if $treeData is not empty).
+        $internetHasChildren = !empty($treeData) ? '1' : '0';
         $fullData = [
             'id' => 'INTERNET',
-            'data' => [
-                'name' => 'THE INTERNET',
-                'id' => 'INTERNET'
-            ],
-            'options' => ['nodeBGColor' => 'var(--color-red-900)', 'nodeBGColorHover' => 'var(--color-red-900)'],
+            'nodeTitle' => 'THE INTERNET',
+            'nodeContent' => 'Global Network Entry',
+            'relationship' => '01' . $internetHasChildren, // Assuming it could have siblings if there were multiple 'internet' roots
+            'className' => 'bg-red-900', // Using a class for background color instead of direct style
+            'collapsed' => false,
             'children' => $treeData,
+            'otherPro' => [
+                'nodeBGColor' => 'var(--color-red-900)', // Keep for potential custom nodeTemplate styling
+                'nodeBGColorHover' => 'var(--color-red-900)'
+            ]
         ];
     @endphp
 
     <script>
         const data = @json($fullData);
-
-        const options = {
-            contentKey: 'data',
-            width: "100vw",
-            height: "100vh",
-            nodeWidth: 250,
-            nodeHeight: 50,
-            fontColor: '#fff',
-            borderColor: '#333',
-            childrenSpacing: 50,
-            siblingSpacing: 20,
-            direction: 'left',
-            enableExpandCollapse: true,
-            nodeTemplate: (content) =>
-            `
-            <div style='display: flex;flex-direction: row;justify-content: flex-start;align-items: center;height: 100%;' wire:click="deviceSelected('${content.id}')">
-                ${content.self_portHTML || ''}
-                <div class='px-4' style="font-weight: bold; font-family: Arial; font-size: 14px">${content.name}</div>
-            </div>`,
-            canvasStyle: 'border: 1px solid black;background: var(--color-gray-900)',
-            enableToolbar: false,
-        };
-        
-        const tree = new ApexTree(document.getElementById('svg-tree'), options);
-        tree.render(data);
+        $(function() {
+            var oc = $('#chart-container').orgchart({
+                'data' : data,
+                'pan' : true, // Enable panning
+                'zoom' : true, // Enable zooming
+                'nodeTitle' : 'nodeTitle', // Use the 'nodeTitle' property from your data
+                'nodeContent' : 'nodeContent', // Use the 'nodeContent' property from your data
+                'nodeId' : 'id', // Use the 'id' property from your data
+                'direction': 'l2r', // Default direction, can be 'l2r', 'r2l', 'b2t'
+                // 'chartClass': 'my-custom-chart', // Optional: if you need multiple orgcharts on a page
+                'toggleSiblingsResp': false, // Set to true if you want sibling toggling
+                // If you need custom node styling beyond simple classes, use nodeTemplate:
+                //'nodeTemplate': 
+            });
+        });
     </script>
 
 </div></div>
