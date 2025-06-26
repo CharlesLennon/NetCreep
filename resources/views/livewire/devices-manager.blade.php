@@ -101,11 +101,11 @@
                     $portNode = [
                         'id' => $portNodeId,
                         'nodeTitle' => $portNodeTitle,
-                        'className' => getSetting('style.children-port-class') . " mx-[10px!important] text-white",
+                        'className' => getSetting('style.children-port-class') . " mx-[10px!important] text-white portNode",
                         'relationship' => $portRelationship,
                         'collapsed' => false, 
                         'children' => [],
-                        'self_portHTML' => ''
+                        'self_portHTML' => '',
                     ];
 
                     $childrenForPort = $device->children->where('parent_port', $port);
@@ -180,8 +180,16 @@
             $('.node').each(function() {
                 var $this = $(this);
                 var originalBgColor = $this.css('background-color');
-                console.log(originalBgColor);
                 $this.css('--original-bg', originalBgColor);
+            });
+            
+            $('.portNode').each(function() {
+                var $this = $(this);
+                var portStyle = {
+                    "height": "85px",
+                    "width": "20px"
+                };
+                $this.css(portStyle);
             });
         });
 
