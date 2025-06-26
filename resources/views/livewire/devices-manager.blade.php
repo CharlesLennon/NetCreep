@@ -1,5 +1,9 @@
 <div><div>
-
+    <style>
+        .node:hover{
+            background-color: rgba(238, 216, 54, 0)!important;
+        }
+    </style>
     <div class="" wire:ignore>
         <div id="chart-container"></div>
     </div>
@@ -86,11 +90,11 @@
                 'nodeTitle' => $nodeTitle,
                 'nodeContent' => $nodeContent,
                 'relationship' => $relationship,
-                'className' => getSetting('style.device-background-color-class') . " mx-[10px!important] w-fit ", // Or use a custom class
+                'className' => getSetting('style.device-background-color-class') . " mx-[10px!important]  text-white", // Or use a custom class
                 'collapsed' => false, // Default to expanded, adjust as needed
+                'self_portHTML' => $device->self_port ? '<div class="h-full ' . getSetting('style.self-port-class') . ' items-center p-1">' . $device->self_port . '</div>' : '',
                 'otherPro' => [ // This is where you can store additional data
                     'mac' => $device->mac,
-                    'self_portHTML' => $device->self_port ? '<div class="h-full ' . getSetting('style.self-port-class') . ' items-center p-1">' . $device->self_port . '</div>' : '',
                     // You might add the background colors here if you intend to style via nodeTemplate JS
                     'nodeBGColor' => getSetting('style.device-background-color-class'),
                 ]
@@ -103,8 +107,7 @@
                 $node['children'] = $ports->map(function ($port) use ($device, $transformDevice) {
                     // Create a port node
                     $portNodeId = displayMac($device) . '-' . $port;
-                    $portNodeTitle = '';
-                    $portNodeContent = 'Port: ' . $port;
+                    $portNodeTitle = 'Port: ' . $port;
 
                     // Port nodes are children of devices, so they have a parent.
                     $portHasChildren = $device->children->where('parent_port', $port)->isNotEmpty() ? '1' : '0';
@@ -113,15 +116,10 @@
                     $portNode = [
                         'id' => $portNodeId,
                         'nodeTitle' => $portNodeTitle,
-                        'nodeContent' => $portNodeContent,
+                        'className' => getSetting('style.children-port-class') . " mx-[10px!important] text-white",
                         'relationship' => $portRelationship,
-                        'className' => getSetting('style.children-port-background-color-class'), // Or custom class
                         'collapsed' => false, // Default to expanded
-                        'otherPro' => [
-                            'port_number' => $port,
-                            'nodeBGColor' => getSetting('style.children-port-background-color-class'),
-                        ],
-                        'children' => []
+                        'children' => [],
                     ];
 
                     // Filter children for this specific port and recursively transform them.
@@ -156,33 +154,43 @@
         $fullData = [
             'id' => 'INTERNET',
             'nodeTitle' => 'THE INTERNET',
-            'nodeContent' => 'Global Network Entry',
+            'className' => getSetting('style.device-background-color-class') . " mx-[10px!important] text-white",
             'relationship' => '01' . $internetHasChildren, // Assuming it could have siblings if there were multiple 'internet' roots
-            'className' => 'bg-red-900', // Using a class for background color instead of direct style
             'collapsed' => false,
             'children' => $treeData,
-            'otherPro' => [
-                'nodeBGColor' => 'var(--color-red-900)', // Keep for potential custom nodeTemplate styling
-                'nodeBGColorHover' => 'var(--color-red-900)'
-            ]
         ];
     @endphp
 
     <script>
+        function customNodeTemplate(data) {
+            var fixStyleStyle = `style="
+                transform:rotate(-90deg) translate(-10px, -20px) rotateY(180deg);
+                transform-origin: bottom center;
+                width: 130px;
+                height:50px;
+                font-size: 12px;
+                overflow: hidden;
+            "`;
+            return `<div class="flex gap-2" ${fixStyleStyle}>
+            
+                <div>${data.self_portHTML}</div>
+                <div>${data.nodeTitle}</div>
+            
+            </div>`;
+        }
+
         const data = @json($fullData);
         $(function() {
             var oc = $('#chart-container').orgchart({
                 'data' : data,
-                'pan' : true, // Enable panning
-                'zoom' : true, // Enable zooming
-                'nodeTitle' : 'nodeTitle', // Use the 'nodeTitle' property from your data
-                'nodeContent' : 'nodeContent', // Use the 'nodeContent' property from your data
-                'nodeId' : 'id', // Use the 'id' property from your data
-                'direction': 'l2r', // Default direction, can be 'l2r', 'r2l', 'b2t'
-                // 'chartClass': 'my-custom-chart', // Optional: if you need multiple orgcharts on a page
-                'toggleSiblingsResp': false, // Set to true if you want sibling toggling
-                // If you need custom node styling beyond simple classes, use nodeTemplate:
-                //'nodeTemplate': 
+                'pan' : true, 
+                'zoom' : true,
+                'nodeTitle' : 'nodeTitle',
+                'nodeContent' : 'nodeContent', 
+                'nodeId' : 'id',
+                'direction': 'l2r',
+                'toggleSiblingsResp': false,
+                'nodeTemplate': customNodeTemplate
             });
         });
     </script>

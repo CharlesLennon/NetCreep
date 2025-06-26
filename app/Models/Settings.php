@@ -15,7 +15,7 @@ class Settings extends Model
     private static function getDefaultKeyValues()
     {
         return [
-            "style.children-port-background-color-class" => "bg-[#ff6f61]",
+            "style.children-port-class" => "bg-[#ff6f61]",
             "style.device-background-color-class" => "bg-gray-800",
 
             "style.self-port-class" => "bg-red-400",//class="{value}"
@@ -37,7 +37,7 @@ class Settings extends Model
     private static function getDefaultKeyDescriptions()
     {
         return [
-            "style.children-port-background-color-class" => "Sets the default background color for child port elements. Used with 'background-color' CSS property.",
+            "style.children-port-class" => "Sets the default background color for child port elements. Used with 'background-color' CSS property.",
             "style.device-background-color-class" => "Sets the default background color for device elements. Used with 'background-color' CSS property.",
 
             "style.self-port-class" => "Defines the CSS class for self-port elements. Used with the 'class' attribute (e.g., Tailwind CSS classes).",
