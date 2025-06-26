@@ -1,5 +1,8 @@
 <div><div>
     <style>
+        .bg-red-400 {
+            background-color: oklch(70.4% 0.191 22.216);
+        }
         .node:hover{
             background-color: var(--original-bg) !important;
             cursor: pointer !important;
@@ -205,6 +208,7 @@
             $('.node').each(function() {
                 var $this = $(this);
                 var originalBgColor = $this.css('background-color');
+                console.log(originalBgColor);
                 $this.css('--original-bg', originalBgColor);
             });
         });

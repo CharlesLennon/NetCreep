@@ -15,7 +15,7 @@ class Settings extends Model
     private static function getDefaultKeyValues()
     {
         return [
-            "style.children-port-class" => "bg-red-500",
+            "style.children-port-class" => "bg-red-400",
             "style.device-background-color-class" => "bg-gray-800",
 
             "style.self-port-class" => "bg-red-400",//class="{value}"
