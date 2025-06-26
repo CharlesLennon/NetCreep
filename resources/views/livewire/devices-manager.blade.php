@@ -121,6 +121,7 @@
                         'relationship' => $portRelationship,
                         'collapsed' => false, // Default to expanded
                         'children' => [],
+                        'self_portHTML' => ''
                     ];
 
                     // Filter children for this specific port and recursively transform them.
