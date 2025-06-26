@@ -72,93 +72,67 @@
 
     @php
         $transformDevice = function ($device, $hasParent = false) use (&$transformDevice) {
-            // Determine relationship string: 'hasParent' 'hasSiblings' 'hasChildren'
-            // For simplicity, we'll assume a node always has siblings unless it's the only child of its parent.
-            // However, without the full context of how siblings are determined, we'll make a general assumption.
-            // For this basic transformation, we'll assume '1' for siblings and parent if it's not the root.
             $hasChildren = $device->children->isNotEmpty() ? '1' : '0';
-            $relationship = ($hasParent ? '1' : '0') . '1' . $hasChildren; // Assuming '1' for siblings for now
-
-            // The new library expects 'nodeTitle' and 'nodeContent'.
-            // We'll use device name for title and IP for content, or a combination.
+            $relationship = ($hasParent ? '1' : '0') . '1' . $hasChildren; 
             $nodeTitle = $device->name ?: 'Unknown Device';
             $nodeContent = $device->last_ip ?: 'No IP';
 
-            // The 'id' property is used for the node's unique ID.
             $nodeId = $device->mac;
-
             $node = [
                 'id' => $nodeId,
                 'nodeTitle' => $nodeTitle,
                 'nodeContent' => $nodeContent,
                 'relationship' => $relationship,
                 'className' => getSetting('style.device-background-color-class') . " mx-[10px!important]  text-white", // Or use a custom class
-                'collapsed' => false, // Default to expanded, adjust as needed
+                'collapsed' => false, 
                 'self_portHTML' => $device->self_port ? '<div class="h-full ' . getSetting('style.self-port-class') . ' items-center p-1">' . $device->self_port . '</div>' : '',
-                'otherPro' => [ // This is where you can store additional data
-                    'mac' => $device->mac,
-                    // You might add the background colors here if you intend to style via nodeTemplate JS
-                    'nodeBGColor' => getSetting('style.device-background-color-class'),
-                ]
             ];
 
-            // If the device has children, we need to create port nodes first.
             if ($device->children->isNotEmpty()) {
                 $ports = $device->children->pluck('parent_port')->unique()->values();
                 
                 $node['children'] = $ports->map(function ($port) use ($device, $transformDevice) {
-                    // Create a port node
                     $portNodeId = displayMac($device) . '-' . $port;
                     $portNodeTitle = 'Port: ' . $port;
 
-                    // Port nodes are children of devices, so they have a parent.
                     $portHasChildren = $device->children->where('parent_port', $port)->isNotEmpty() ? '1' : '0';
-                    $portRelationship = '11' . $portHasChildren; // Has parent, has siblings (among ports), has children
+                    $portRelationship = '11' . $portHasChildren; 
 
                     $portNode = [
                         'id' => $portNodeId,
                         'nodeTitle' => $portNodeTitle,
                         'className' => getSetting('style.children-port-class') . " mx-[10px!important] text-white",
                         'relationship' => $portRelationship,
-                        'collapsed' => false, // Default to expanded
+                        'collapsed' => false, 
                         'children' => [],
                         'self_portHTML' => ''
                     ];
 
-                    // Filter children for this specific port and recursively transform them.
                     $childrenForPort = $device->children->where('parent_port', $port);
                     if ($childrenForPort->isNotEmpty()) {
-                        // Pass true for $hasParent to indicate these are children nodes
                         $portNode['children'] = $childrenForPort->map(fn($child) => $transformDevice($child, true))->values();
                     }
                     return $portNode;
-                })->values()->all(); // Convert collection to plain array
+                })->values()->all(); 
             } else {
-                // If no children, ensure 'children' property is an empty array for consistency
                 $node['children'] = [];
             }
 
             return $node;
         };
 
-        // 1. Get top-level devices and eager load ALL descendants.
         $devices = App\Models\Device::whereNull('parent_mac')
                                     ->with('childrenRecursive')
                                     ->get();
 
-        // 2. Map over the top-level devices to start the transformation process.
-        // Top-level devices do not have a parent, so $hasParent is false.
-        $treeData = $devices->map(fn($device) => $transformDevice($device, false))->values()->all(); // Convert collection to plain array
+        $treeData = $devices->map(fn($device) => $transformDevice($device, false))->values()->all(); 
 
-        // 3. Assemble the final data structure for the OrgChart library.
-        // The root node 'INTERNET' doesn't have a parent, so its relationship is '011'
-        // (no parent, has siblings if other root nodes were present, has children if $treeData is not empty).
         $internetHasChildren = !empty($treeData) ? '1' : '0';
         $fullData = [
             'id' => 'INTERNET',
             'nodeTitle' => 'THE INTERNET',
             'className' => getSetting('style.device-background-color-class') . " mx-[10px!important] text-white",
-            'relationship' => '01' . $internetHasChildren, // Assuming it could have siblings if there were multiple 'internet' roots
+            'relationship' => '01' . $internetHasChildren, 
             'collapsed' => false,
             'children' => $treeData,
         ];
@@ -210,7 +184,6 @@
                 $this.css('--original-bg', originalBgColor);
             });
         });
-
 
     </script>
 
