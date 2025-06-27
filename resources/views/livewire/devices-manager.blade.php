@@ -92,7 +92,7 @@
                 $ports = $device->children->pluck('parent_port')->unique()->values();
                 
                 $node['children'] = $ports->map(function ($port) use ($device, $transformDevice) {
-                    $portNodeId = displayMac($device) . '-' . $port;
+                    $portNodeId = "port-" . $device->mac . "-" . $port;
                     $portNodeTitle = 'Port: ' . $port;
 
                     $portHasChildren = $device->children->where('parent_port', $port)->isNotEmpty() ? '1' : '0';
@@ -140,6 +140,9 @@
 
     <script>
         function customNodeTemplate(data) {
+            const hasCollapsibleChildren = data.children && data.children.length > 0;
+            const toggleText = data.collapsed ? '+' : '-';
+            const collapsedAttr = data.collapsed ? 'true' : 'false';
             var fixStyleStyle = `style="
                 transform:rotate(-90deg) translate(-10px, -20px) rotateY(180deg);
                 transform-origin: bottom center;
@@ -148,12 +151,35 @@
                 font-size: 12px;
                 overflow: hidden;
             "`;
-            return `<div class="flex gap-2 noIsibs" ${fixStyleStyle} >
-            
-                <div>${data.self_portHTML}</div>
+            return `<div class="flex gap-2 noIsibs" ${fixStyleStyle} wire:click="deviceSelected('${data.id}')">
+                ${data.self_portHTML ? `<div>${data.self_portHTML}</div>` : ''}
                 <div>${data.nodeTitle}</div>
+                ${data.nodeContent ? `<div>(${data.nodeContent})</div>` : ''}
+                ${hasCollapsibleChildren ? `<span ${fixStyleStyle} class="jump-up toggle-children-btn" data-node-id="${data.id}" data-collapsed="${collapsedAttr}" onclick="toggleOrgChartChildren(this)">${toggleText}</span>` : ''}
+            </div>
+            `;
             
-            </div>`;
+        }   
+        
+        function toggleOrgChartChildren(clickedElement) {
+            if (event) { event.stopPropagation(); }
+            const btn = clickedElement;
+            const nodeId = btn.dataset.nodeId;
+            const nodeLi = document.getElementById(nodeId);
+
+            if (window.orgChartInstance && nodeLi) {
+                let isCollapsed = btn.dataset.collapsed === 'true';
+
+                if (isCollapsed) {
+                    window.orgChartInstance.showChildren($(nodeLi)); 
+                    btn.textContent = '-';
+                    btn.dataset.collapsed = 'false';
+                } else {
+                    window.orgChartInstance.hideChildren($(nodeLi)); 
+                    btn.textContent = '+';
+                    btn.dataset.collapsed = 'true';
+                }
+            }
         }
 
         const data = @json($fullData);
@@ -168,6 +194,27 @@
                 'direction': 'l2r',
                 'toggleSiblingsResp': false,
                 'nodeTemplate': customNodeTemplate
+            });
+
+            window.orgChartInstance = oc;
+
+            $('#chart-container').on('click', '.toggle-children-btn', function(e) {
+                console.log("oi");
+                e.stopPropagation(); // Prevent orgchart's default node click behavior
+                var $btn = $(this);
+                var nodeDiv = $btn.parent();
+                console.log(nodeDiv);
+                if (nodeDiv.length) {
+                    var $childrenUls = nodeDiv.siblings('ul.nodes');
+                    if ($childrenUls.length) {
+                        $childrenUls.toggleClass('hidden');
+                        if ($childrenUls.first().hasClass('hidden')) {
+                            $btn.text('+');
+                        } else {
+                            $btn.text('-');
+                        }
+                    }
+                }
             });
 
             $('.noIsibs').each(function() {
@@ -190,6 +237,17 @@
                     "width": "20px"
                 };
                 $this.css(portStyle);
+            });
+
+            $('div.jump-up').each(function() {
+                var $jumpUpDiv = $(this); 
+                var $parentDiv = $jumpUpDiv.parent(); 
+
+                if ($parentDiv.length) { 
+                    $jumpUpDiv.insertAfter($parentDiv);
+                } else {
+                    console.warn(`Element without parent found:`, $jumpUpDiv[0]);
+                }
             });
         });
 
