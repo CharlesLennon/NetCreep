@@ -140,9 +140,6 @@
 
     <script>
         function customNodeTemplate(data) {
-            const hasCollapsibleChildren = data.children && data.children.length > 0;
-            const toggleText = data.collapsed ? '+' : '-';
-            const collapsedAttr = data.collapsed ? 'true' : 'false';
             var fixStyleStyle = `style="
                 transform:rotate(-90deg) translate(-10px, -20px) rotateY(180deg);
                 transform-origin: bottom center;
@@ -155,32 +152,10 @@
                 ${data.self_portHTML ? `<div>${data.self_portHTML}</div>` : ''}
                 <div>${data.nodeTitle}</div>
                 ${data.nodeContent ? `<div>(${data.nodeContent})</div>` : ''}
-                ${hasCollapsibleChildren ? `<span ${fixStyleStyle} class="jump-up toggle-children-btn" data-node-id="${data.id}" data-collapsed="${collapsedAttr}" onclick="toggleOrgChartChildren(this)">${toggleText}</span>` : ''}
             </div>
             `;
             
         }   
-        
-        function toggleOrgChartChildren(clickedElement) {
-            if (event) { event.stopPropagation(); }
-            const btn = clickedElement;
-            const nodeId = btn.dataset.nodeId;
-            const nodeLi = document.getElementById(nodeId);
-
-            if (window.orgChartInstance && nodeLi) {
-                let isCollapsed = btn.dataset.collapsed === 'true';
-
-                if (isCollapsed) {
-                    window.orgChartInstance.showChildren($(nodeLi)); 
-                    btn.textContent = '-';
-                    btn.dataset.collapsed = 'false';
-                } else {
-                    window.orgChartInstance.hideChildren($(nodeLi)); 
-                    btn.textContent = '+';
-                    btn.dataset.collapsed = 'true';
-                }
-            }
-        }
 
         const data = @json($fullData);
         $(function() {
@@ -195,8 +170,6 @@
                 'toggleSiblingsResp': false,
                 'nodeTemplate': customNodeTemplate
             });
-
-            window.orgChartInstance = oc;
 
             $('#chart-container').on('click', '.toggle-children-btn', function(e) {
                 console.log("oi");
