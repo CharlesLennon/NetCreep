@@ -7,6 +7,9 @@
             background-color: var(--original-bg) !important;
             cursor: pointer !important;
         }
+        .orgchart .node.focused {
+            background-color: var(--original-bg) !important;
+        }
     </style>
     <div class="" wire:ignore>
         <div id="chart-container"></div>
