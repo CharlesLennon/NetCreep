@@ -3,7 +3,7 @@ NetCreep is a modern fast network mapper designed from the ground up to have a r
 
 Visually Explor your network
 
-![alt text](image.png)
+(psst you can hide the MAC's for screenshots ect)
 ![alt text](image-1.png)
 ![alt text](image-2.png)
 ![alt text](image-3.png)
