@@ -17,7 +17,7 @@
     
     @if($device_id)
         <div class="fixed bottom-0 left-0 right-0 {{getSetting('style.alt-class')}} p-4 text-white max-w-90 h-full overflow-y-auto">
-            <button wire:click="deselectDevice" class="absolute top-4 right-4 text-red-500 hover:text-red-700">X</button>
+            <button wire:click="deselectDevice" class="absolute top-4 right-4 text-red-500 hover:text-red-700 cursor-pointer">X</button>
             <h2 class="text-lg font-bold">Selected Device: {{ displayMac($device_id) }}</h2>
             <h1 class="text-md font-semibold">Device Details</h1>
             <p><strong>MAC:</strong> {{ displayMac($device_mac) }}</p>
@@ -56,7 +56,7 @@
 
     @if($port_parent_mac)
         <div class="fixed bottom-0 left-0 right-0 {{getSetting('style.alt-class')}} p-4 text-white max-w-90 h-full overflow-y-auto">
-            <button wire:click="deselectPort" class="absolute top-4 right-4 text-red-500 hover:text-red-700">X</button>
+            <button wire:click="deselectPort" class="absolute top-4 right-4 text-red-500 hover:text-red-700 cursor-pointer">X</button>
             <h2 class="text-lg font-bold">Selected Port: {{ $port }} on {{displayMac($this->port_parent_mac)}}</h2>
             <div class="mt-2">
                 <label class="block mb-1">New Port Value:</label>
