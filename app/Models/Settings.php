@@ -15,10 +15,8 @@ class Settings extends Model
     private static function getDefaultKeyValues()
     {
         return [
-            "style.children-port-background-color" => "#ff6f61",//style="background-color:{value}"
-            "style.children-port-background-color-hover" => "#ff6f61",//style="background-color:{value}"
-            "style.device-background-color" => "var(--color-gray-800)",//style="background-color:{value}"
-            "style.device-background-color-hover" => "#00afb9",//style="background-color:{value}"
+            "style.children-port-class" => "bg-red-400",
+            "style.device-background-color-class" => "bg-gray-800",
 
             "style.self-port-class" => "bg-red-400",//class="{value}"
             "style.main-class" => "bg-gray-900",//class="{value}"
@@ -39,10 +37,8 @@ class Settings extends Model
     private static function getDefaultKeyDescriptions()
     {
         return [
-            "style.children-port-background-color" => "Sets the default background color for child port elements. Used with 'background-color' CSS property.",
-            "style.children-port-background-color-hover" => "Sets the background color for child port elements when hovered. Used with 'background-color' CSS property.",
-            "style.device-background-color" => "Sets the default background color for device elements. Used with 'background-color' CSS property.",
-            "style.device-background-color-hover" => "Sets the background color for device elements when hovered. Used with 'background-color' CSS property.",
+            "style.children-port-class" => "Sets the default background color for child port elements. Used with 'background-color' CSS property.",
+            "style.device-background-color-class" => "Sets the default background color for device elements. Used with 'background-color' CSS property.",
 
             "style.self-port-class" => "Defines the CSS class for self-port elements. Used with the 'class' attribute (e.g., Tailwind CSS classes).",
             "style.main-class" => "Defines the main CSS class for primary UI elements. Used with the 'class' attribute.",

@@ -1,12 +1,23 @@
 <div><div>
-
-    <div class="flex justify-center items-center h-screen" wire:ignore>
-        <div id="svg-tree" class="w-full h-full"></div>
+    <style>
+        .bg-red-400 {
+            background-color: oklch(70.4% 0.191 22.216);
+        }
+        .node:hover{
+            background-color: var(--original-bg) !important;
+            cursor: pointer !important;
+        }
+        .orgchart .node.focused {
+            background-color: var(--original-bg) !important;
+        }
+    </style>
+    <div class="" wire:ignore>
+        <div id="chart-container"></div>
     </div>
     
     @if($device_id)
         <div class="fixed bottom-0 left-0 right-0 {{getSetting('style.alt-class')}} p-4 text-white max-w-90 h-full overflow-y-auto">
-            <button wire:click="deselectDevice" class="absolute top-4 right-4 text-red-500 hover:text-red-700">X</button>
+            <button wire:click="deselectDevice" class="absolute top-4 right-4 text-red-500 hover:text-red-700 cursor-pointer">X</button>
             <h2 class="text-lg font-bold">Selected Device: {{ displayMac($device_id) }}</h2>
             <h1 class="text-md font-semibold">Device Details</h1>
             <p><strong>MAC:</strong> {{ displayMac($device_mac) }}</p>
@@ -45,7 +56,7 @@
 
     @if($port_parent_mac)
         <div class="fixed bottom-0 left-0 right-0 {{getSetting('style.alt-class')}} p-4 text-white max-w-90 h-full overflow-y-auto">
-            <button wire:click="deselectPort" class="absolute top-4 right-4 text-red-500 hover:text-red-700">X</button>
+            <button wire:click="deselectPort" class="absolute top-4 right-4 text-red-500 hover:text-red-700 cursor-pointer">X</button>
             <h2 class="text-lg font-bold">Selected Port: {{ $port }} on {{displayMac($this->port_parent_mac)}}</h2>
             <div class="mt-2">
                 <label class="block mb-1">New Port Value:</label>
@@ -60,115 +71,178 @@
                 </div>
             </div>
         </div>
-
-
     @endif
 
     @php
-        // We define a recursive function (a "closure") to transform each device.
-        // The `use (&$transform)` part allows the function to call itself.
-        $transformDevice = function ($device) use (&$transformDevice) {
-            $selfPortBackgroundColor = getSetting('style.self-port-class');
+        $transformDevice = function ($device, $hasParent = false) use (&$transformDevice) {
+            $hasChildren = $device->children->isNotEmpty() ? '1' : '0';
+            $relationship = ($hasParent ? '1' : '0') . '1' . $hasChildren; 
+            $nodeTitle = $device->name ?: 'Unknown Device';
+            $nodeContent = $device->last_ip ?: 'No IP';
+
+            $nodeId = $device->mac;
             $node = [
-                'id' => $device->mac,
-                'data' => [
-                    'name' => ($device->name ?: 'unknown') ." ". $device->last_ip ,
-                    'id' => $device->mac,
-                    'self_portHTML' => $device->self_port ? '<div class="flex h-full ' . $selfPortBackgroundColor . ' items-center p-1">' . $device->self_port . '</div>' : '',
-                ],
-                'options' => [
-                    'nodeBGColor' =>  getSetting('style.device-background-color'),
-                    'nodeBGColorHover' => getSetting('style.device-background-color-hover')
-                ]
+                'id' => $nodeId,
+                'nodeTitle' => $nodeTitle,
+                'nodeContent' => $nodeContent,
+                'relationship' => $relationship,
+                'className' => getSetting('style.device-background-color-class') . " mx-[10px!important]  text-white",
+                'collapsed' => false, 
+                'isPort' => false,
+                'self_portHTML' => $device->self_port ? '<div class="h-full ' . getSetting('style.self-port-class') . ' items-center p-1">' . $device->self_port . '</div>' : '',
             ];
 
-            // If the device has children, we recursively transform them.
             if ($device->children->isNotEmpty()) {
-                // We use ->map() to apply this same function to each child.
-                //it should be device -> children_parent_port -> children
                 $ports = $device->children->pluck('parent_port')->unique()->values();
-                //each port should be a node
+                
                 $node['children'] = $ports->map(function ($port) use ($device, $transformDevice) {
-                    // Create a port node
+                    $portNodeId = "port-" . $device->mac . "-" . $port;
+                    $portNodeTitle = $port;
+
+                    $portHasChildren = $device->children->where('parent_port', $port)->isNotEmpty() ? '1' : '0';
+                    $portRelationship = '11' . $portHasChildren; 
+
                     $portNode = [
-                        'id' => displayMac($device) . '-' . $port,
-                        'data' => [
-                            'name' => 'Port: ' . $port,
-                            'id' => "port-" . $device->mac . '-' . $port,
-                        ],
-                        'options' => [
-                            'nodeBGColor' => getSetting('style.children-port-background-color'),
-                            'nodeBGColorHover' => getSetting('style.children-port-background-color-hover')
-                        ],
-                        'children' => []
+                        'id' => $portNodeId,
+                        'nodeTitle' => $portNodeTitle,
+                        'className' => getSetting('style.children-port-class') . " mx-[10px!important] text-white portNode",
+                        'relationship' => $portRelationship,
+                        'collapsed' => false, 
+                        'children' => [],
+                        'isPort' => true,
+                        'self_portHTML' => '',
                     ];
-                    // Filter children for this port
+
                     $childrenForPort = $device->children->where('parent_port', $port);
-                    // If there are children for this port, transform them
                     if ($childrenForPort->isNotEmpty()) {
-                        $portNode['children'] = $childrenForPort->map($transformDevice)->values();
+                        $portNode['children'] = $childrenForPort->map(fn($child) => $transformDevice($child, true))->values();
                     }
                     return $portNode;
-                })->values();
+                })->values()->all(); 
             } else {
-                // If there are no children, we just set an empty array.
-                // This is important to ensure the structure is consistent.
-                // Otherwise, ApexTree might not render the node correctly.
-
-
-                $node['children'] = $device->children->map($transformDevice)->values();
+                $node['children'] = [];
             }
 
             return $node;
         };
 
-        // 1. Get top-level devices and eager load ALL descendants using our new relationship.
         $devices = App\Models\Device::whereNull('parent_mac')
                                     ->with('childrenRecursive')
                                     ->get();
 
-        // 2. Map over the top-level devices to start the transformation process.
-        $treeData = $devices->map($transformDevice)->values();
+        $treeData = $devices->map(fn($device) => $transformDevice($device, false))->values()->all(); 
 
-        // 3. Assemble the final data structure for the ApexTree library.
+        $internetHasChildren = !empty($treeData) ? '1' : '0';
         $fullData = [
             'id' => 'INTERNET',
-            'data' => [
-                'name' => 'THE INTERNET',
-                'id' => 'INTERNET'
-            ],
-            'options' => ['nodeBGColor' => 'var(--color-red-900)', 'nodeBGColorHover' => 'var(--color-red-900)'],
+            'nodeTitle' => 'THE INTERNET',
+            'className' => getSetting('style.device-background-color-class') . " mx-[10px!important] text-white",
+            'relationship' => '01' . $internetHasChildren, 
+            'collapsed' => false,
             'children' => $treeData,
         ];
     @endphp
 
     <script>
-        const data = @json($fullData);
+        function customNodeTemplate(data) {
+            var fixStyleStyle = `style="
+                transform:rotate(-90deg) translate(-10px, -20px) rotateY(180deg);
+                transform-origin: bottom center;
+                width: 130px;
+                height:50px;
+                font-size: 12px;
+                overflow: hidden;
+            "`;
+            var subTitle = data.isPort ? "Port:" : "";
+            var contentStyle = data.isPort ? `style="transform: translate(4%,-90%);"` : `style="width: 100%;height: 100%;"`;
+            return `<div class="flex gap-2 noIsibs" ${fixStyleStyle} wire:click="deviceSelected('${data.id}')">
+                ${data.self_portHTML ? `<div class="flex self-center">${data.self_portHTML}</div>` : ''}
+                
+                <div class="flex-col items-center self-center text-xs" ${contentStyle}>
+                    ${subTitle ? `${subTitle}` : ''} ${data.nodeTitle}
+                    ${data.nodeContent ? `<div style="font-size: 0.6rem;">(${data.nodeContent})</div>` : ''}
+                </div>
+            </div>
+            `;
+            
+        }   
 
-        const options = {
-            contentKey: 'data',
-            width: "100vw",
-            height: "100vh",
-            nodeWidth: 250,
-            nodeHeight: 50,
-            fontColor: '#fff',
-            borderColor: '#333',
-            childrenSpacing: 50,
-            siblingSpacing: 20,
-            direction: 'left',
-            enableExpandCollapse: true,
-            nodeTemplate: (content) =>
-            `
-            <div style='display: flex;flex-direction: row;justify-content: flex-start;align-items: center;height: 100%;' wire:click="deviceSelected('${content.id}')">
-                ${content.self_portHTML || ''}
-                <div class='px-4' style="font-weight: bold; font-family: Arial; font-size: 14px">${content.name}</div>
-            </div>`,
-            canvasStyle: 'border: 1px solid black;background: var(--color-gray-900)',
-            enableToolbar: false,
-        };
-        
-        const tree = new ApexTree(document.getElementById('svg-tree'), options);
-        tree.render(data);
+        const data = @json($fullData);
+        $(function() {
+            var oc = $('#chart-container').orgchart({
+                'data' : data,
+                'pan' : true, 
+                'zoom' : true,
+                'nodeTitle' : 'nodeTitle',
+                'nodeContent' : 'nodeContent', 
+                'nodeId' : 'id',
+                'direction': 'l2r',
+                'toggleSiblingsResp': false,
+                'nodeTemplate': customNodeTemplate
+            });
+
+            $('#chart-container').on('click', '.toggle-children-btn', function(e) {
+                console.log("oi");
+                e.stopPropagation(); // Prevent orgchart's default node click behavior
+                var $btn = $(this);
+                var nodeDiv = $btn.parent();
+                console.log(nodeDiv);
+                if (nodeDiv.length) {
+                    var $childrenUls = nodeDiv.siblings('ul.nodes');
+                    if ($childrenUls.length) {
+                        $childrenUls.toggleClass('hidden');
+                        if ($childrenUls.first().hasClass('hidden')) {
+                            $btn.text('+');
+                        } else {
+                            $btn.text('-');
+                        }
+                    }
+                }
+            });
+
+            $('.noIsibs').each(function() {
+                const siblingsToRemove = $(this).siblings('i');
+                if (siblingsToRemove.length > 0) {
+                    siblingsToRemove.remove();
+                }
+            });
+
+            $('.node').each(function() {
+                var $this = $(this);
+                var originalBgColor = $this.css('background-color');
+                $this.css('--original-bg', originalBgColor);
+            });
+            
+            $('.portNode').each(function() {
+                var $this = $(this);
+                var portStyle = {
+                    "height": "85px",
+                    "width": "20px"
+                };
+                $this.css(portStyle);
+            });
+            $('.portContent').each(function() {
+                var $this = $(this);
+                var portStyle = {
+                    "height": "69px",
+                    "width": "22px"
+                };
+                $this.css(portStyle);
+            });
+            
+
+            $('div.jump-up').each(function() {
+                var $jumpUpDiv = $(this); 
+                var $parentDiv = $jumpUpDiv.parent(); 
+
+                if ($parentDiv.length) { 
+                    $jumpUpDiv.insertAfter($parentDiv);
+                } else {
+                    console.warn(`Element without parent found:`, $jumpUpDiv[0]);
+                }
+            });
+        });
+
     </script>
 
 </div></div>

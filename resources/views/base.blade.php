@@ -3,10 +3,12 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        {{-- style --}}
+        {{-- tailwind --}}
         <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
         {{-- diagram --}}
-        <script src="https://cdn.jsdelivr.net/npm/apextree"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/orgchart/5.0.0/css/jquery.orgchart.css" integrity="sha512-5n6uZMAXFfsFB/7EnP7/6HwUOLpWGtSuYZMg9lM7K+RRhDmQoKQOUABjRn+Pl8MdhaXBdwmxB/j0aivqOLryOw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/orgchart/5.0.0/js/jquery.orgchart.min.js" integrity="sha512-IUNqrYw8R7mj0iBzb0FOTGTgEFrxZCHVCHnePUEmcjJ/XQE/0sqRhBmGpp20N2lVzAkIBs0Sz+ibRN8/W9YFnQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
         @livewireStyles
         <title>{{ config('app.name') }}</title>
