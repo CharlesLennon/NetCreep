@@ -85,6 +85,7 @@
                 'relationship' => $relationship,
                 'className' => getSetting('style.device-background-color-class') . " mx-[10px!important]  text-white",
                 'collapsed' => false, 
+                'isPort' => false,
                 'self_portHTML' => $device->self_port ? '<div class="h-full ' . getSetting('style.self-port-class') . ' items-center p-1">' . $device->self_port . '</div>' : '',
             ];
 
@@ -93,7 +94,7 @@
                 
                 $node['children'] = $ports->map(function ($port) use ($device, $transformDevice) {
                     $portNodeId = "port-" . $device->mac . "-" . $port;
-                    $portNodeTitle = 'Port: ' . $port;
+                    $portNodeTitle = $port;
 
                     $portHasChildren = $device->children->where('parent_port', $port)->isNotEmpty() ? '1' : '0';
                     $portRelationship = '11' . $portHasChildren; 
@@ -105,6 +106,7 @@
                         'relationship' => $portRelationship,
                         'collapsed' => false, 
                         'children' => [],
+                        'isPort' => true,
                         'self_portHTML' => '',
                     ];
 
@@ -148,10 +150,15 @@
                 font-size: 12px;
                 overflow: hidden;
             "`;
+            var subTitle = data.isPort ? "Port:" : "";
+            var contentStyle = data.isPort ? `style="transform: translate(4%,-90%);"` : `style="width: 100%;height: 100%;"`;
             return `<div class="flex gap-2 noIsibs" ${fixStyleStyle} wire:click="deviceSelected('${data.id}')">
-                ${data.self_portHTML ? `<div>${data.self_portHTML}</div>` : ''}
-                <div>${data.nodeTitle}</div>
-                ${data.nodeContent ? `<div>(${data.nodeContent})</div>` : ''}
+                ${data.self_portHTML ? `<div class="flex self-center">${data.self_portHTML}</div>` : ''}
+                
+                <div class="flex-col items-center self-center text-xs" ${contentStyle}>
+                    ${subTitle ? `${subTitle}` : ''} ${data.nodeTitle}
+                    ${data.nodeContent ? `<div>(${data.nodeContent})</div>` : ''}
+                </div>
             </div>
             `;
             
@@ -211,6 +218,15 @@
                 };
                 $this.css(portStyle);
             });
+            $('.portContent').each(function() {
+                var $this = $(this);
+                var portStyle = {
+                    "height": "69px",
+                    "width": "22px"
+                };
+                $this.css(portStyle);
+            });
+            
 
             $('div.jump-up').each(function() {
                 var $jumpUpDiv = $(this); 
