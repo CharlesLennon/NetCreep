@@ -160,7 +160,7 @@
                 
                 <div class="flex-col items-center self-center text-xs" ${contentStyle}>
                     ${subTitle ? `${subTitle}` : ''} ${data.nodeTitle}
-                    ${data.nodeContent ? `<div>(${data.nodeContent})</div>` : ''}
+                    ${data.nodeContent ? `<div style="font-size: 0.6rem;">(${data.nodeContent})</div>` : ''}
                 </div>
             </div>
             `;
