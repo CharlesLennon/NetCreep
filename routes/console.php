@@ -37,7 +37,6 @@ function processArpScanOutput($output) {
                 [
                     'last_ip' => $ip,
                     'last_seen' => now(),
-                    'first_found' => now(), 
                 ]
             );
             // Update the device's name if it is not set or unknown
@@ -60,7 +59,6 @@ function processArpScanOutput($output) {
         [
             'last_ip' => $myIp,
             'last_seen' => now(),
-            'first_found' => now(),
             'name' => env('APP_NAME', 'NetCreep'),
         ]
     );
