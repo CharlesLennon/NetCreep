@@ -46,13 +46,13 @@ function processArpScanOutput($output) {
                 $device->name = $name ?: 'Unknown';
             }
             $device->save();
-            Log::info("Found MAC address: $mac, IP: $ip, Name: $name");   
+            Log::info("[$mac][$ip] Found MAC address, Name: $name");   
         }
     }
     // what is my IP and MAC address
     $myMac = exec("cat /sys/class/net/$myInterface/address");
     $myIp = exec('hostname -I | awk \'{print $1}\''); // Get the first IP address
-    Log::info("My MAC address: $myMac, My IP: $myIp");
+    Log::info("[$myMac][$myIp] My MAC address");
     // Update or create my device
     $d = App\Models\Device::updateOrCreate(
         [
