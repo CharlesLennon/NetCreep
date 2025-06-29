@@ -40,7 +40,7 @@ function processArpScanOutput($output) {
                 ]
             );
 
-            if ($device->first_found == null) { $d->first_found = now(); }
+            if ($device->first_found == null) { $device->first_found = now(); }
             // Update the device's name if it is not set or unknown
             if (!$device->name || $device->name === 'Unknown') {
                 $device->name = $name ?: 'Unknown';
