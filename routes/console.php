@@ -40,6 +40,8 @@ function processArpScanOutput($output) {
                 ]
             );
 
+            $device = App\Models\Device::find( $mac );
+
             if ($device->first_found == null) { $device->first_found = now(); }
             // Update the device's name if it is not set or unknown
             if (!$device->name || $device->name === 'Unknown') {
