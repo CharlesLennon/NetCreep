@@ -39,11 +39,13 @@ function processArpScanOutput($output) {
                     'last_seen' => now(),
                 ]
             );
+
+            if ($device->first_found == null) { $d->first_found = now(); }
             // Update the device's name if it is not set or unknown
             if (!$device->name || $device->name === 'Unknown') {
                 $device->name = $name ?: 'Unknown';
-                $device->save();
             }
+            $device->save();
             Log::info("Found MAC address: $mac, IP: $ip, Name: $name");   
         }
     }
@@ -52,7 +54,7 @@ function processArpScanOutput($output) {
     $myIp = exec('hostname -I | awk \'{print $1}\''); // Get the first IP address
     Log::info("My MAC address: $myMac, My IP: $myIp");
     // Update or create my device
-    App\Models\Device::updateOrCreate(
+    $d = App\Models\Device::updateOrCreate(
         [
             'mac' => $myMac,
         ],
@@ -62,6 +64,9 @@ function processArpScanOutput($output) {
             'name' => env('APP_NAME', 'NetCreep'),
         ]
     );
+
+    if ($d->first_found == null) { $d->first_found = now(); $d->save(); }
+
     return "ARP scan completed. Found " . count($lines) . " devices.";
 }
 

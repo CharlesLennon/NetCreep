@@ -26,7 +26,7 @@ return new class extends Migration
             $table->string('self_port')->nullable(); // Port number parent mac is connected to on this device
 
             //first found and last seen timestamps
-            $table->timestamp('first_found')->useCurrent();
+            $table->timestamp('first_found')->nullable();
             $table->timestamp('last_seen')->useCurrent();
         });
 
