@@ -117,6 +117,7 @@ Artisan::command('reset-settings', function () {
 
 // run an arp-scan every 5 minutes
 Artisan::command('arp-scan', function () {
+    Log::info('Arp-scan command executed...');
     $this->comment('Running arp-scan...');
     $output = shell_exec("arp-scan " . getSetting('arp.args'));
     $result = processArpScanOutput($output);
