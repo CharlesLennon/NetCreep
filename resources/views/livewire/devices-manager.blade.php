@@ -50,6 +50,15 @@
                         Delete Device
                     </button>
                 </div>
+                <div class="flex gap-2 items-center mt-2 mb-1">
+                    <p>Device Des:</p>
+                    <button wire:click="editDeviceDescription" class="{{getSetting('style.danger-button-class')}} hover:bg-red-700 text-white font-bold px-4 rounded text-xs h-full">
+                            Edit Device Description
+                    </button>
+                </div>
+                <div class="mt-2">
+                    {!! bladeCompile($device_description) !!}
+                </div>
             </div>
         </div>
     @endif
