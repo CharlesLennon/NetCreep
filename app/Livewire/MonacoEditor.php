@@ -18,9 +18,6 @@ class MonacoEditor extends Component
         $this->field = $field;
         $this->id = $id;
         $this->language = $language;
-
-        //replace &#039; with '
-        //replace &quot; with "
         
         $this->content = $this->class::find($this->id)->{$this->field} ?? 'ERROR: Content not found';
         $this->content = escapeQuotes($this->content);
