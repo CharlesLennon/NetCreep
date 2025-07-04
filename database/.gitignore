@@ -1,1 +1,1 @@
-*.sqlite*
+/DB/*.sqlite*
