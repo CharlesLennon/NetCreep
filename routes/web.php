@@ -17,4 +17,13 @@ Route::get('/', fn() => view('base'));
 
 Route::get('/devices', fn() => view('devices'))->name('devices');
 
+Route::get('/device/{mac}/description', function($mac) {
+    return view('monaco-editor', [
+        'id' => $mac,
+        'class' => \App\Models\Device::class,
+        'field' => "description",
+        "language" => "blade"
+    ]);
+})->name('monaco-editor-device-description');
+
 Route::get('/settings', fn() => view('settings'))->name('settings');

@@ -15,6 +15,7 @@
         @yield('head')
     </head>
     <body class="antialiased">
+        @livewireScripts
         <div class="relative sm:flex sm:justify-center sm:items-center min-h-screen {{getSetting('style.main-class')}}">
             <div style="font-size:12px; line-height:normal;" class="fixed top-0 bg-red-900 px-2 text-white z-50 self-center">
                 @php
@@ -65,7 +66,7 @@
                     </a>
                 @endif
             </div>
-            @livewireScripts
+            
         </div>
     </body>
 </html>

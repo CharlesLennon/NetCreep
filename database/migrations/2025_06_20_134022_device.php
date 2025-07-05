@@ -28,6 +28,9 @@ return new class extends Migration
             //first found and last seen timestamps
             $table->timestamp('first_found')->nullable();
             $table->timestamp('last_seen')->useCurrent();
+
+            //lots of html for description
+            $table->longText('description')->nullable();
         });
 
         Schema::create('device_presence', function (Blueprint $table) {

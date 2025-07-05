@@ -10,16 +10,16 @@ class DevicesManager extends Component
 
 
     public $device_id = null;
-    //can be edited
+
     public $device_name, $device_mac, $device_type, $device_vendor;
     public $device_parent_mac, $device_parent_port, $device_self_port;
+    public $device_description;
 
     public $device_ip, $device_last_seen, $device_first_found;
 
-    public $port, $newPort, $port_parent_mac; // Port information for mass update
+    public $port, $newPort, $port_parent_mac;
 
 
-    // deviceSelected 
     #[On('deviceSelected')]
     public function deviceSelected($deviceId)
     {
@@ -42,6 +42,7 @@ class DevicesManager extends Component
             $this->device_type = $device->type;
             $this->device_vendor = $device->vendor;
             $this->device_parent_mac = $device->parent_mac;
+            $this->device_description = $device->description;
             $this->device_parent_port = $device->parent_port;
             $this->device_self_port = $device->self_port;
 
@@ -112,6 +113,7 @@ class DevicesManager extends Component
         $this->device_type = '';
         $this->device_vendor = '';
         $this->device_parent_mac = '';
+        $this->device_description = '';
         $this->device_parent_port = '';
         $this->device_self_port = '';
     }
@@ -147,6 +149,12 @@ class DevicesManager extends Component
             $device->delete();
             $this->deselectDevice();
         }
+    }
+
+    public function editDeviceDescription()
+    {
+        $mac = $this->device_mac;
+        $this->redirect("/device/$mac/description");
     }
 
     public function render()
