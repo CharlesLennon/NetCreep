@@ -65,7 +65,7 @@ class Settings extends Model
 
     public static function use($key)
     {
-        if(!\Schema::hasTable($this->table)){ return self::getDefaultKeyValues()[$key]; }
+        if(!\Schema::hasTable(self::getModel()->getTable())){ return self::getDefaultKeyValues()[$key]; }
         $db = self::where("key", $key)->first();
         if ($db) { return $db->value; }
         return self::getDefaultKeyValues()[$key];
