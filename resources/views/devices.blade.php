@@ -1,5 +1,5 @@
 @extends('base')
 @section('body')
-    @livewire('devicesManager')
+    @livewire('devicesManager', ['request' => request()])
 @endsection
     
