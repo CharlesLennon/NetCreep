@@ -259,8 +259,8 @@
                     'border': '4px solid red',
                     'border-radius': '8px',
                     'box-shadow': '0 0 10px rgba(255, 0, 0, 0.5)',
-                    'background-color': 'rgba(255, 0, 0, 0.1)'
                 });
+                $this.attr('title', 'You are here');
             });
         });
 
