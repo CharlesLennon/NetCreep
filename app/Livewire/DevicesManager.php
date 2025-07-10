@@ -19,6 +19,17 @@ class DevicesManager extends Component
 
     public $port, $newPort, $port_parent_mac;
 
+    public $userLocation = null;
+
+
+    public function mount($request = null)
+    {
+        // Initialize the device fields
+        $this->resetDeviceFields();
+
+        //get request IP
+        $this->userLocation = $request ? $request->ip() : null;
+    }
 
     #[On('deviceSelected')]
     public function deviceSelected($deviceId)

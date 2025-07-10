@@ -56,8 +56,8 @@
                             Edit Device Description
                     </button>
                 </div>
-                <div class="mt-2">
-                    {!! bladeCompile($device_description) !!}
+                <div class="mt-2 p-2 border border-dashed rounded">
+                    {!! bladeCompile($device_description, ['device_id' => $device_id]) !!}
                 </div>
             </div>
         </div>
@@ -83,11 +83,13 @@
     @endif
 
     @php
-        $transformDevice = function ($device, $hasParent = false) use (&$transformDevice) {
+        $transformDevice = function ($device, $hasParent = false) use (&$transformDevice, $userLocation) {
             $hasChildren = $device->children->isNotEmpty() ? '1' : '0';
             $relationship = ($hasParent ? '1' : '0') . '1' . $hasChildren; 
             $nodeTitle = $device->name ?: 'Unknown Device';
             $nodeContent = $device->last_ip ?: 'No IP';
+
+            $userIshere = $userLocation && $device->last_ip === $userLocation;
 
             $nodeId = $device->mac;
             $node = [
@@ -95,7 +97,7 @@
                 'nodeTitle' => $nodeTitle,
                 'nodeContent' => $nodeContent,
                 'relationship' => $relationship,
-                'className' => getSetting('style.device-background-color-class') . " mx-[10px!important]  text-white",
+                'className' => getSetting('style.device-background-color-class') . " mx-[10px!important]  text-white " . ($userIshere ? " userHere " : ""),
                 'collapsed' => false, 
                 'isPort' => false,
                 'self_portHTML' => $device->self_port ? '<div class="h-full ' . getSetting('style.self-port-class') . ' items-center p-1">' . $device->self_port . '</div>' : '',
@@ -249,6 +251,16 @@
                 } else {
                     console.warn(`Element without parent found:`, $jumpUpDiv[0]);
                 }
+            });
+
+            $('div.userHere').each(function() {
+                var $this = $(this);
+                $this.css({
+                    'border': '4px solid red',
+                    'border-radius': '8px',
+                    'box-shadow': '0 0 10px rgba(255, 0, 0, 0.5)',
+                });
+                $this.attr('title', 'You are here');
             });
         });
 
